@@ -4,7 +4,7 @@ import { getTeamProfile } from './teamsData.js';
 // CONFIGURATION & SETUP
 // ==========================================================================
 // Hardcoded KVdb.io bucket ID so all players connect to the same cloud instance
-const BUCKET_ID = 'wcp2026_adb21506_prod_2';
+const BUCKET_ID = 'WBwZWfutTTERivY7rh3uFi';
 const BASE_URL = `https://kvdb.io/${BUCKET_ID}`;
 
 // Players Configuration
