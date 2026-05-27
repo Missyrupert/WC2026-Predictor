@@ -208,6 +208,17 @@ h1, h2, h3, h4, h5, h6 {
   transform: translateY(-2px);
 }
 
+.btn-danger {
+  background: rgba(239, 68, 68, 0.15);
+  color: var(--danger);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+}
+
+.btn-danger:hover {
+  background: rgba(239, 68, 68, 0.25);
+  transform: translateY(-2px);
+}
+
 /* Inputs & Selects */
 .app-select {
   background: var(--bg-input);
@@ -1468,4 +1479,41 @@ h1, h2, h3, h4, h5, h6 {
     border-radius: 0;
     padding: 1rem;
   }
+}
+
+/* ==========================================================================
+   10. PIN SECURITY MODAL STYLES
+   ========================================================================== */
+.pin-inputs-row {
+  display: flex;
+  justify-content: center;
+  gap: 0.75rem;
+  margin: 1.5rem 0;
+}
+
+.pin-digit, .pin-digit-confirm {
+  width: 50px;
+  height: 50px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  color: var(--accent);
+  font-size: 1.5rem;
+  text-align: center;
+  font-family: var(--font-heading);
+  font-weight: 700;
+  transition: var(--transition);
+}
+
+.pin-digit:focus, .pin-digit-confirm:focus {
+  border-color: var(--border-focus);
+  box-shadow: 0 0 10px rgba(0, 245, 160, 0.25);
+  outline: none;
+}
+
+.pin-error-msg {
+  color: var(--danger);
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-top: 0.75rem;
 }

@@ -222,6 +222,23 @@
             </div>
           </div>
 
+          <!-- PIN Security Settings -->
+          <div class="app-card admin-security-card">
+            <div class="card-header">
+              <h3>Manage Player Access</h3>
+            </div>
+            <div class="admin-control-group">
+              <label for="admin-reset-player-select">Reset Player's Security PIN:</label>
+              <select id="admin-reset-player-select" class="app-select">
+                <!-- Populated dynamically -->
+              </select>
+              <p class="control-help" style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem;">This will delete their set PIN. The next time they log in, they will be prompted to create a new one.</p>
+            </div>
+            <div class="admin-control-actions">
+              <button id="btn-reset-player-pin" class="btn btn-danger">Reset Selected PIN</button>
+            </div>
+          </div>
+
           <!-- Match Results Entry -->
           <div class="app-card admin-results-card">
             <div class="card-header flex-between">
@@ -304,6 +321,39 @@
       <div class="modal-actions">
         <button id="confirm-modal-cancel" class="btn btn-secondary">Go Back</button>
         <button id="confirm-modal-ok" class="btn btn-primary">Yes, Save Predictions</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= PIN ENTRY / CREATION MODAL ================= -->
+  <div id="pin-modal" class="modal-overlay hidden">
+    <div class="modal-card">
+      <div class="modal-icon" id="pin-modal-icon">🔐</div>
+      <h2 id="pin-modal-title">Enter Your PIN</h2>
+      <p id="pin-modal-subtitle" style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1.5rem;">Please enter your 4-digit passcode to access your predictions.</p>
+      
+      <div class="pin-inputs-row">
+        <input type="password" pattern="[0-9]*" inputmode="numeric" maxlength="1" class="pin-digit" data-idx="0">
+        <input type="password" pattern="[0-9]*" inputmode="numeric" maxlength="1" class="pin-digit" data-idx="1">
+        <input type="password" pattern="[0-9]*" inputmode="numeric" maxlength="1" class="pin-digit" data-idx="2">
+        <input type="password" pattern="[0-9]*" inputmode="numeric" maxlength="1" class="pin-digit" data-idx="3">
+      </div>
+      
+      <div id="pin-confirm-container" class="hidden">
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin: 1rem 0 0.5rem 0;">Confirm your new 4-digit PIN:</p>
+        <div class="pin-inputs-row">
+          <input type="password" pattern="[0-9]*" inputmode="numeric" maxlength="1" class="pin-digit-confirm" data-idx="0">
+          <input type="password" pattern="[0-9]*" inputmode="numeric" maxlength="1" class="pin-digit-confirm" data-idx="1">
+          <input type="password" pattern="[0-9]*" inputmode="numeric" maxlength="1" class="pin-digit-confirm" data-idx="2">
+          <input type="password" pattern="[0-9]*" inputmode="numeric" maxlength="1" class="pin-digit-confirm" data-idx="3">
+        </div>
+      </div>
+
+      <div id="pin-error-msg" class="pin-error-msg hidden" style="color: var(--danger); font-size: 0.85rem; font-weight: 600; margin-top: 1rem;">Incorrect PIN. Please try again.</div>
+
+      <div class="modal-actions mt-6">
+        <button id="pin-modal-cancel" class="btn btn-secondary">Cancel</button>
+        <button id="pin-modal-submit" class="btn btn-primary" disabled>Login</button>
       </div>
     </div>
   </div>

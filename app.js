@@ -104,6 +104,9 @@ let matches = []; // Programmatically generated
 let predictions = {}; // predictions[userId][matchId] = { home: int, away: int }
 let officialResults = {}; // officialResults[matchId] = { home: int, away: int }
 let localDraftPredictions = {}; // Unsaved changes in the active predictor tab
+let playerPins = {}; // Hashed PIN codes for each user: playerPins[userId] = 'hashed_pin'
+let targetedPlayerId = null; // The player card clicked, pending PIN verification
+let pinRegistrationMode = false; // True if creating a new PIN, false if logging in
 
 // ==========================================================================
 // FIXTURE GENERATOR (72 matches, A-L groups, 6 matches per group)
@@ -193,7 +196,10 @@ async function syncDatabase() {
     // 2. Sync official scores
     officialResults = await dbGet('official_results', {});
 
-    // 3. Sync player predictions
+    // 3. Sync player PIN codes
+    playerPins = await dbGet('player_pins', {});
+
+    // 4. Sync player predictions
     for (const pId of Object.keys(PLAYERS)) {
       predictions[pId] = await dbGet(`user_${pId}`, {});
     }
@@ -320,7 +326,7 @@ function renderAvatarPicker() {
       <span class="avatar-role">${player.role}</span>
     `;
     card.addEventListener('click', () => {
-      loginAs(pId);
+      triggerPinFlow(pId);
     });
     grid.appendChild(card);
   });
@@ -688,6 +694,18 @@ function renderAdminPanel() {
   // Active Prediction Week Dropdown value
   document.getElementById('admin-active-week').value = activeWeek;
 
+  // Populate Reset PIN player dropdown
+  const resetSelect = document.getElementById('admin-reset-player-select');
+  if (resetSelect && resetSelect.children.length === 0) {
+    resetSelect.innerHTML = '';
+    Object.keys(PLAYERS).forEach(pId => {
+      const opt = document.createElement('option');
+      opt.value = pId;
+      opt.innerText = PLAYERS[pId].name;
+      resetSelect.appendChild(opt);
+    });
+  }
+
   const resWeekFilterVal = document.getElementById('admin-results-week-filter').value;
   const adminMatches = matches.filter(m => m.week.toString() === resWeekFilterVal);
   const container = document.getElementById('admin-match-list');
@@ -948,4 +966,179 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('detail-player-select').addEventListener('change', () => {
     renderCompareMatrix();
   });
+
+  // PIN Input Navigation (Auto-focus next inputs, delete on backspace)
+  const pinInputs = document.querySelectorAll('.pin-digit');
+  const confirmInputs = document.querySelectorAll('.pin-digit-confirm');
+
+  function setupPinInputNavigation(inputs, nextRowTrigger = null) {
+    inputs.forEach((input, idx) => {
+      // Direct digit input validation & auto-focus next
+      input.addEventListener('input', (e) => {
+        const val = e.target.value;
+        if (!/^[0-9]$/.test(val)) {
+          e.target.value = '';
+          return;
+        }
+
+        if (idx < inputs.length - 1) {
+          inputs[idx + 1].focus();
+        } else if (nextRowTrigger) {
+          nextRowTrigger.focus();
+        }
+
+        checkPinSubmitValidity();
+      });
+
+      // Backspace logic to return to previous input
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Backspace' && !e.target.value && idx > 0) {
+          inputs[idx - 1].focus();
+          inputs[idx - 1].value = '';
+          checkPinSubmitValidity();
+        }
+      });
+    });
+  }
+
+  setupPinInputNavigation(pinInputs, confirmInputs[0]);
+  setupPinInputNavigation(confirmInputs);
+
+  function checkPinSubmitValidity() {
+    let pinFilled = Array.from(pinInputs).every(inp => inp.value !== '');
+    let confirmFilled = true;
+
+    if (pinRegistrationMode) {
+      confirmFilled = Array.from(confirmInputs).every(inp => inp.value !== '');
+    }
+
+    document.getElementById('pin-modal-submit').disabled = !(pinFilled && confirmFilled);
+  }
+
+  // PIN Modal Cancel button
+  document.getElementById('pin-modal-cancel').addEventListener('click', () => {
+    document.getElementById('pin-modal').classList.add('hidden');
+    targetedPlayerId = null;
+  });
+
+  // PIN Modal Submit (Create or verify PIN)
+  document.getElementById('pin-modal-submit').addEventListener('click', async () => {
+    const errorMsg = document.getElementById('pin-error-msg');
+    errorMsg.classList.add('hidden');
+
+    const pin = Array.from(pinInputs).map(inp => inp.value).join('');
+
+    if (pinRegistrationMode) {
+      const confirmPin = Array.from(confirmInputs).map(inp => inp.value).join('');
+
+      if (pin !== confirmPin) {
+        errorMsg.innerText = "PIN codes do not match. Try again.";
+        errorMsg.classList.remove('hidden');
+        // Clear confirm inputs
+        confirmInputs.forEach(inp => inp.value = '');
+        confirmInputs[0].focus();
+        document.getElementById('pin-modal-submit').disabled = true;
+        return;
+      }
+
+      // Hash and save new PIN
+      showLoader();
+      const hash = await hashPIN(pin);
+      playerPins[targetedPlayerId] = hash;
+      const success = await dbPut('player_pins', playerPins);
+      hideLoader();
+
+      if (success) {
+        document.getElementById('pin-modal').classList.add('hidden');
+        loginAs(targetedPlayerId);
+      } else {
+        alert("Failed to save PIN to cloud. Try again.");
+      }
+    } else {
+      // Login mode - verify hash
+      showLoader();
+      const hash = await hashPIN(pin);
+      hideLoader();
+
+      if (hash === playerPins[targetedPlayerId]) {
+        document.getElementById('pin-modal').classList.add('hidden');
+        loginAs(targetedPlayerId);
+      } else {
+        errorMsg.innerText = "Incorrect PIN. Please try again.";
+        errorMsg.classList.remove('hidden');
+        // Clear inputs and reset focus
+        pinInputs.forEach(inp => inp.value = '');
+        pinInputs[0].focus();
+        document.getElementById('pin-modal-submit').disabled = true;
+      }
+    }
+  });
+
+  // Admin PIN Reset handler
+  document.getElementById('btn-reset-player-pin').addEventListener('click', async () => {
+    const select = document.getElementById('admin-reset-player-select');
+    const pId = select.value;
+
+    if (!pId) return;
+
+    const confirmReset = confirm(`Are you sure you want to reset the security PIN for ${PLAYERS[pId].name}? They will be forced to choose a new one on their next login.`);
+    if (!confirmReset) return;
+
+    showLoader();
+    delete playerPins[pId];
+    const success = await dbPut('player_pins', playerPins);
+    hideLoader();
+
+    if (success) {
+      alert(`PIN successfully reset for ${PLAYERS[pId].name}!`);
+      renderAdminPanel();
+    } else {
+      alert("Failed to reset PIN. Try again.");
+    }
+  });
 });
+
+// Cryptographically hash the PIN using SHA-256 (native, secure, client-side)
+async function hashPIN(pin) {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(pin);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+function triggerPinFlow(pId) {
+  targetedPlayerId = pId;
+  const isPinRegistered = playerPins[pId] !== undefined;
+
+  // Clear all PIN inputs
+  document.querySelectorAll('.pin-digit, .pin-digit-confirm').forEach(input => input.value = '');
+  document.getElementById('pin-error-msg').classList.add('hidden');
+  document.getElementById('pin-modal-submit').disabled = true;
+
+  if (!isPinRegistered) {
+    // PIN registration mode
+    pinRegistrationMode = true;
+    document.getElementById('pin-modal-icon').innerText = '🆕';
+    document.getElementById('pin-modal-title').innerText = `Create PIN for ${PLAYERS[pId].name}`;
+    document.getElementById('pin-modal-subtitle').innerText = "Choose a 4-digit PIN to secure your predictor account.";
+    document.getElementById('pin-confirm-container').classList.remove('hidden');
+    document.getElementById('pin-modal-submit').innerText = "Create & Login";
+  } else {
+    // PIN login mode
+    pinRegistrationMode = false;
+    document.getElementById('pin-modal-icon').innerText = '🔐';
+    document.getElementById('pin-modal-title').innerText = `Enter PIN for ${PLAYERS[pId].name}`;
+    document.getElementById('pin-modal-subtitle').innerText = "Please enter your 4-digit PIN to log in.";
+    document.getElementById('pin-confirm-container').classList.add('hidden');
+    document.getElementById('pin-modal-submit').innerText = "Login";
+  }
+
+  document.getElementById('pin-modal').classList.remove('hidden');
+  
+  // Auto-focus first input
+  setTimeout(() => {
+    const firstInput = document.querySelector('.pin-digit[data-idx="0"]');
+    if (firstInput) firstInput.focus();
+  }, 100);
+}
