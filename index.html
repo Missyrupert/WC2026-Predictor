@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FIFA World Cup 2026 Predictor</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Plus+Jakarta+Sans:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+  <!-- Background Blur Elements -->
+  <div class="bg-glow bg-glow-1"></div>
+  <div class="bg-glow bg-glow-2"></div>
+
+  <!-- Welcome / Login Screen -->
+  <div id="login-screen" class="login-screen">
+    <div class="login-card">
+      <div class="badge-2026">UNITED 2026</div>
+      <h1>WORLD CUP PREDICTOR</h1>
+      <p class="subtitle">Select your avatar to view standings and enter your predictions</p>
+      
+      <div id="avatar-grid" class="avatar-grid">
+        <!-- Dynamically populated from JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Application Wrapper (Hidden initially) -->
+  <div id="main-app" class="main-app hidden">
+    <!-- Navigation -->
+    <header class="app-header">
+      <div class="logo-area">
+        <span class="logo-icon">🏆</span>
+        <div class="logo-text">
+          <h2>WORLD CUP 2026</h2>
+          <span class="tagline">The Prediction Challenge</span>
+        </div>
+      </div>
+
+      <nav class="app-nav">
+        <button class="nav-tab active" data-tab="leaderboard">
+          <span class="icon">📊</span> Leaderboard
+        </button>
+        <button class="nav-tab" data-tab="predictor">
+          <span class="icon">⚽</span> Predictor
+        </button>
+        <button class="nav-tab" data-tab="teams">
+          <span class="icon">🌍</span> Groups & Standings
+        </button>
+        <button id="nav-admin" class="nav-tab hidden" data-tab="admin">
+          <span class="icon">⚙️</span> Manager Portal
+        </button>
+      </nav>
+
+      <div class="user-status-card" id="user-status-card">
+        <img id="header-avatar" src="" alt="Avatar" class="header-avatar">
+        <div class="user-info">
+          <span class="user-name" id="header-user-name">Guest</span>
+          <span class="user-role" id="header-user-role">Player</span>
+        </div>
+        <button id="logout-btn" class="logout-btn" title="Switch User">🔁</button>
+      </div>
+    </header>
+
+    <main class="app-content">
+
+      <!-- ================= LEADERBOARD TAB ================= -->
+      <section id="tab-leaderboard" class="tab-pane active">
+        <div class="section-header">
+          <div>
+            <h1>Tournament Leaderboard</h1>
+            <p>Live rankings based on predictions vs actual World Cup results</p>
+          </div>
+          <div class="scoring-guide">
+            <span class="badge score-3">Exact Score = 3 pts</span>
+            <span class="badge score-1">Correct Result = 1 pt</span>
+          </div>
+        </div>
+
+        <div class="leaderboard-grid">
+          <!-- Leaderboard Table Card -->
+          <div class="app-card leaderboard-card">
+            <div class="card-header">
+              <h3>Current Standings</h3>
+              <span class="pulse-indicator">Live Syncing</span>
+            </div>
+            <div class="table-container">
+              <table class="leaderboard-table">
+                <thead>
+                  <tr>
+                    <th style="width: 60px; text-align: center;">Rank</th>
+                    <th>Player</th>
+                    <th style="text-align: center;">Exact (3pt)</th>
+                    <th style="text-align: center;">Result (1pt)</th>
+                    <th style="text-align: center;">Played</th>
+                    <th style="text-align: center; width: 100px;">Total Points</th>
+                  </tr>
+                </thead>
+                <tbody id="leaderboard-body">
+                  <!-- Dynamically populated from JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Quick Stats / Standings Summary Card -->
+          <div class="app-card stats-summary-card">
+            <div class="card-header">
+              <h3>Tournament Progress</h3>
+            </div>
+            <div class="progress-stats">
+              <div class="stat-box">
+                <span class="stat-value" id="stats-total-matches">72</span>
+                <span class="stat-label">Total Group Matches</span>
+              </div>
+              <div class="stat-box">
+                <span class="stat-value" id="stats-played-matches">0</span>
+                <span class="stat-label">Matches Completed</span>
+              </div>
+            </div>
+            <div class="progress-bar-container">
+              <div class="progress-bar-fill" id="progress-bar-fill" style="width: 0%;"></div>
+            </div>
+            <div class="upcoming-indicator" id="active-week-indicator">
+              Active Week: <strong id="active-week-name">-</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- Expansion panel to see player predictions details -->
+        <div class="app-card detail-predictions-card mt-6">
+          <div class="card-header flex-between">
+            <h3>Player Prediction Matrix</h3>
+            <div class="filter-controls">
+              <label for="detail-player-select">Compare: </label>
+              <select id="detail-player-select" class="app-select">
+                <!-- Populated dynamically -->
+              </select>
+            </div>
+          </div>
+          <div class="matrix-grid" id="matrix-container">
+            <!-- Dynamically populated with predictions side-by-side with actual results -->
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= PREDICTOR TAB ================= -->
+      <section id="tab-predictor" class="tab-pane">
+        <div class="section-header flex-between">
+          <div>
+            <h1>Match Predictor</h1>
+            <p>Predict match outcomes. Live week is open for prediction, future weeks are greyed out.</p>
+          </div>
+          <div class="week-filter-bar" id="predictor-week-filters">
+            <!-- Populated dynamically: buttons for Week 1, Week 2, Week 3 -->
+          </div>
+        </div>
+
+        <!-- Warning banner if predicting on locked week -->
+        <div id="predictor-status-banner" class="status-banner info">
+          <span>You are viewing Week 1 predictions. Matches are open.</span>
+        </div>
+
+        <div class="fixtures-container">
+          <div class="fixtures-list" id="predictor-fixtures-list">
+            <!-- Dynamically populated from JS -->
+          </div>
+          
+          <div class="submit-sticky-bar">
+            <div class="submit-info">
+              <span id="unsaved-count">0</span> changes pending
+            </div>
+            <button id="save-predictions-btn" class="btn btn-primary" disabled>
+              Save Predictions
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= TEAMS TAB ================= -->
+      <section id="tab-teams" class="tab-pane">
+        <div class="section-header">
+          <h1>Tournament Groups & Standings</h1>
+          <p>Live World Cup standings. Click any team to view their detailed stats dossier and recent match history.</p>
+        </div>
+
+        <div class="group-dossier-grid" id="teams-group-grid">
+          <!-- Dynamically populated with groups A to L and their teams -->
+        </div>
+      </section>
+
+      <!-- ================= ADMIN TAB ================= -->
+      <section id="tab-admin" class="tab-pane">
+        <div class="section-header">
+          <h1>Manager Portal</h1>
+          <p>Manage active prediction weeks, fetch live scores, or manually input results.</p>
+        </div>
+
+        <div class="admin-grid">
+          <!-- Control Panel -->
+          <div class="app-card admin-controls-card">
+            <div class="card-header">
+              <h3>Tournament Settings</h3>
+            </div>
+            <div class="admin-control-group">
+              <label for="admin-active-week">Active Prediction Week (Unlocks inputs):</label>
+              <select id="admin-active-week" class="app-select">
+                <option value="1">Week 1 Only</option>
+                <option value="2">Week 2 Only</option>
+                <option value="3">Week 3 Only</option>
+                <option value="all">Unlock All Weeks (Test Mode)</option>
+              </select>
+              <p class="control-help">Only matches assigned to the active week can be predicted by players. Other weeks will be greyed out.</p>
+            </div>
+            <div class="admin-control-actions">
+              <button id="btn-sync-settings" class="btn btn-primary">Save Settings</button>
+              <button id="btn-fetch-live-results" class="btn btn-accent">🔄 Fetch Live Results</button>
+            </div>
+          </div>
+
+          <!-- Match Results Entry -->
+          <div class="app-card admin-results-card">
+            <div class="card-header flex-between">
+              <h3>Input Match Results</h3>
+              <div class="filter-controls">
+                <select id="admin-results-week-filter" class="app-select">
+                  <option value="1">Week 1 Matches</option>
+                  <option value="2">Week 2 Matches</option>
+                  <option value="3">Week 3 Matches</option>
+                </select>
+              </div>
+            </div>
+            <div class="admin-match-list" id="admin-match-list">
+              <!-- Dynamically populated from JS -->
+            </div>
+            <div class="admin-submit-bar">
+              <button id="save-results-btn" class="btn btn-primary">Save & Sync Results</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- ================= SLIDE-IN TEAM DOSSIER SIDEBAR ================= -->
+  <div id="dossier-overlay" class="dossier-overlay hidden"></div>
+  <aside id="dossier-sidebar" class="dossier-sidebar">
+    <button id="dossier-close-btn" class="dossier-close-btn">&times;</button>
+    <div class="dossier-header">
+      <img class="dossier-flag-img" id="dossier-flag" src="" alt="Flag">
+      <div>
+        <h1 id="dossier-team-name">Scotland</h1>
+        <span class="dossier-group" id="dossier-group-label">Group C</span>
+      </div>
+    </div>
+    <div class="dossier-body">
+      <div class="dossier-section">
+        <h3>Qualification Campaign</h3>
+        <p id="dossier-qual-story">Detailed qualification campaign story...</p>
+      </div>
+
+      <div class="dossier-section">
+        <h3>Nations Media Prospects</h3>
+        <blockquote id="dossier-prospects">Press consensus and tournament outlook...</blockquote>
+      </div>
+
+      <div class="dossier-section">
+        <h3>Last 10 Competitive Matches</h3>
+        <div class="table-container">
+          <table class="dossier-matches-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Opponent</th>
+                <th>Result</th>
+                <th>Comp</th>
+              </tr>
+            </thead>
+            <tbody id="dossier-matches-body">
+              <!-- Populated dynamically -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ================= CONFIRMATION MODAL ================= -->
+  <div id="confirm-modal" class="modal-overlay hidden">
+    <div class="modal-card">
+      <div class="modal-icon">⚠️</div>
+      <h2>Confirm Your Predictions</h2>
+      <p>Please double-check your scorelines. Once saved, these will sync to the tournament database.</p>
+      
+      <div class="confirm-summary-list" id="confirm-summary-list">
+        <!-- Populated dynamically with predicted scores summary -->
+      </div>
+
+      <div class="modal-actions">
+        <button id="confirm-modal-cancel" class="btn btn-secondary">Go Back</button>
+        <button id="confirm-modal-ok" class="btn btn-primary">Yes, Save Predictions</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script type="module" src="/app.js"></script>
+</body>
+</html>
