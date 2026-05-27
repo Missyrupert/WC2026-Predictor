@@ -7,8 +7,8 @@ export const teamsData = {
     last10: [
       { date: "16 Nov 2025", opponent: "Colombia (H)", score: "2-2", result: "D", comp: "Friendly" },
       { date: "11 Nov 2025", opponent: "Uruguay (A)", score: "1-2", result: "L", comp: "Friendly" },
-      { date: "15 Oct 2025", opponent: "USA (A)", score: "1-2", result: "L", comp: "Nations League" },
-      { date: "10 Oct 2025", opponent: "Canada (H)", score: "2-0", result: "W", comp: "Nations League" },
+      { date: "15 Oct 2025", opponent: "USA (A)", score: "1-2", result: "L", comp: "CONCACAF Nations League" },
+      { date: "10 Oct 2025", opponent: "Canada (H)", score: "2-0", result: "W", comp: "CONCACAF Nations League" },
       { date: "08 Sep 2025", opponent: "Germany (H)", score: "1-1", result: "D", comp: "Friendly" },
       { date: "04 Sep 2025", opponent: "Netherlands (A)", score: "0-2", result: "L", comp: "Friendly" }
     ]
@@ -61,8 +61,8 @@ export const teamsData = {
     last10: [
       { date: "15 Nov 2025", opponent: "Ecuador (H)", score: "2-1", result: "W", comp: "Friendly" },
       { date: "10 Nov 2025", opponent: "Japan (A)", score: "1-2", result: "L", comp: "Friendly" },
-      { date: "14 Oct 2025", opponent: "Jamaica (H)", score: "3-1", result: "W", comp: "Nations League" },
-      { date: "09 Oct 2025", opponent: "Mexico (A)", score: "0-2", result: "L", comp: "Nations League" },
+      { date: "14 Oct 2025", opponent: "Jamaica (H)", score: "3-1", result: "W", comp: "CONCACAF Nations League" },
+      { date: "09 Oct 2025", opponent: "Mexico (A)", score: "0-2", result: "L", comp: "CONCACAF Nations League" },
       { date: "08 Sep 2025", opponent: "Belgium (H)", score: "1-2", result: "L", comp: "Friendly" },
       { date: "04 Sep 2025", opponent: "Morocco (A)", score: "1-1", result: "D", comp: "Friendly" }
     ]
@@ -169,8 +169,8 @@ export const teamsData = {
     last10: [
       { date: "15 Nov 2025", opponent: "Germany (H)", score: "1-2", result: "L", comp: "Friendly" },
       { date: "11 Nov 2025", opponent: "Italy (A)", score: "1-1", result: "D", comp: "Friendly" },
-      { date: "15 Oct 2025", opponent: "Mexico (H)", score: "2-1", result: "W", comp: "Nations League" },
-      { date: "10 Oct 2025", opponent: "Panama (A)", score: "3-0", result: "W", comp: "Nations League" },
+      { date: "15 Oct 2025", opponent: "Mexico (H)", score: "2-1", result: "W", comp: "CONCACAF Nations League" },
+      { date: "10 Oct 2025", opponent: "Panama (A)", score: "3-0", result: "W", comp: "CONCACAF Nations League" },
       { date: "09 Sep 2025", opponent: "Japan (H)", score: "2-2", result: "D", comp: "Friendly" },
       { date: "05 Sep 2025", opponent: "France (A)", score: "1-3", result: "L", comp: "Friendly" }
     ]
