@@ -23,6 +23,12 @@
       <h1>WORLD CUP PREDICTOR</h1>
       <p class="subtitle">Select your avatar to view standings and enter your predictions</p>
       
+      <!-- Group Selector Segmented Control -->
+      <div class="group-selector-segmented">
+        <button class="group-toggle-btn active" data-group="group1">Group 1</button>
+        <button class="group-toggle-btn" data-group="group2">Group 2</button>
+      </div>
+
       <div id="avatar-grid" class="avatar-grid">
         <!-- Dynamically populated from JS -->
       </div>
@@ -39,6 +45,12 @@
           <h2>WORLD CUP 2026</h2>
           <span class="tagline">The Prediction Challenge</span>
         </div>
+      </div>
+
+      <!-- Group Selector in Header -->
+      <div class="header-group-selector">
+        <button class="header-group-btn active" data-group="group1">Group 1</button>
+        <button class="header-group-btn" data-group="group2">Group 2</button>
       </div>
 
       <nav class="app-nav">
@@ -107,26 +119,43 @@
             </div>
           </div>
 
-          <!-- Quick Stats / Standings Summary Card -->
-          <div class="app-card stats-summary-card">
-            <div class="card-header">
-              <h3>Tournament Progress</h3>
-            </div>
-            <div class="progress-stats">
-              <div class="stat-box">
-                <span class="stat-value" id="stats-total-matches">72</span>
-                <span class="stat-label">Total Group Matches</span>
+          <!-- Sidebar: contains Quick Stats & Banter Board -->
+          <div class="leaderboard-sidebar">
+            <!-- Quick Stats / Standings Summary Card -->
+            <div class="app-card stats-summary-card">
+              <div class="card-header">
+                <h3>Tournament Progress</h3>
               </div>
-              <div class="stat-box">
-                <span class="stat-value" id="stats-played-matches">0</span>
-                <span class="stat-label">Matches Completed</span>
+              <div class="progress-stats">
+                <div class="stat-box">
+                  <span class="stat-value" id="stats-total-matches">72</span>
+                  <span class="stat-label">Total Group Matches</span>
+                </div>
+                <div class="stat-box">
+                  <span class="stat-value" id="stats-played-matches">0</span>
+                  <span class="stat-label">Matches Completed</span>
+                </div>
+              </div>
+              <div class="progress-bar-container">
+                <div class="progress-bar-fill" id="progress-bar-fill" style="width: 0%;"></div>
+              </div>
+              <div class="upcoming-indicator" id="active-week-indicator">
+                Active Week: <strong id="active-week-name">-</strong>
               </div>
             </div>
-            <div class="progress-bar-container">
-              <div class="progress-bar-fill" id="progress-bar-fill" style="width: 0%;"></div>
-            </div>
-            <div class="upcoming-indicator" id="active-week-indicator">
-              Active Week: <strong id="active-week-name">-</strong>
+
+            <!-- Banter Board Card -->
+            <div class="app-card banter-board-card">
+              <div class="card-header">
+                <h3>Banter Board</h3>
+              </div>
+              <div class="banter-messages-container" id="banter-messages">
+                <!-- Dynamically populated from JS -->
+              </div>
+              <div class="banter-input-area">
+                <input type="text" id="banter-input" class="banter-input" placeholder="Type a message..." maxlength="250">
+                <button id="banter-send-btn" class="btn btn-primary">Send</button>
+              </div>
             </div>
           </div>
         </div>

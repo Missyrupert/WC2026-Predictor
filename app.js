@@ -1,20 +1,46 @@
 import { getTeamProfile } from './teamsData.js';
 
 // ==========================================================================
-// CONFIGURATION & SETUP
+// CONFIGURATION & SETUP (UNIFIED BUCKETS & PLAYERS)
 // ==========================================================================
-// Hardcoded KVdb.io bucket ID so all players connect to the same cloud instance
-const BUCKET_ID = 'WBwZWfutTTERivY7rh3uFi';
-const BASE_URL = `https://kvdb.io/${BUCKET_ID}`;
-
-// Players Configuration
-const PLAYERS = {
-  cj: { id: 'cj', name: 'CJ', avatar: '/assets/players/cj.png', role: 'Player Manager' },
-  roger: { id: 'roger', name: 'Roger', avatar: '/assets/players/roger.png', role: 'Player' },
-  eugene: { id: 'eugene', name: 'Eugene', avatar: '/assets/players/eugene.png', role: 'Player' },
-  ebbsy: { id: 'ebbsy', name: 'Ebbsy', avatar: '/assets/players/ebbsy.png', role: 'Player' },
-  jason: { id: 'jason', name: 'Jason', avatar: '/assets/players/jason.png', role: 'Player' }
+const GROUPS_CONFIG = {
+  group1: {
+    name: "Group 1",
+    bucketId: "WBwZWfutTTERivY7rh3uFi",
+    players: {
+      cj: { id: 'cj', name: 'CJ', avatar: '/assets/players/cj.png', role: 'Player Manager' },
+      roger: { id: 'roger', name: 'Roger', avatar: '/assets/players/roger.png', role: 'Player' },
+      eugene: { id: 'eugene', name: 'Eugene', avatar: '/assets/players/eugene.png', role: 'Player' },
+      ebbsy: { id: 'ebbsy', name: 'Ebbsy', avatar: '/assets/players/ebbsy.png', role: 'Player' },
+      jason: { id: 'jason', name: 'Jason', avatar: '/assets/players/jason.png', role: 'Player' }
+    }
+  },
+  group2: {
+    name: "Group 2",
+    bucketId: "3AzXw9tZTYA2PZYxEqfwTX",
+    players: {
+      cj: { id: 'cj', name: 'CJ', avatar: '/assets/players/cj.png', role: 'Player Manager' },
+      trev: { id: 'trev', name: 'Trev', avatar: '/assets/players/trev.jpg', role: 'Player' },
+      jacko: { id: 'jacko', name: 'Jacko', avatar: '/assets/players/jacko.png', role: 'Player' },
+      davo: { id: 'davo', name: 'Davo', avatar: '/assets/players/davo.png', role: 'Player' },
+      gav: { id: 'gav', name: 'Gav', avatar: '/assets/players/gav.png', role: 'Player' },
+      covy: { id: 'covy', name: 'Covy', avatar: '/assets/players/covy.jpg', role: 'Player' },
+      melrose: { id: 'melrose', name: 'Melrose', avatar: '/assets/players/melrose.jpg', role: 'Player' }
+    }
+  }
 };
+
+// URL / Storage Routing
+const urlParams = new URLSearchParams(window.location.search);
+let activeGroupId = urlParams.get('group') || localStorage.getItem('wc_selected_group') || 'group1';
+if (!GROUPS_CONFIG[activeGroupId]) {
+  activeGroupId = 'group1';
+}
+localStorage.setItem('wc_selected_group', activeGroupId);
+
+let BUCKET_ID = GROUPS_CONFIG[activeGroupId].bucketId;
+let BASE_URL = `https://kvdb.io/${BUCKET_ID}`;
+let PLAYERS = GROUPS_CONFIG[activeGroupId].players;
 
 // Teams configuration for the 12 groups of 4 (48 teams total)
 const GROUPS = {
@@ -107,6 +133,7 @@ let localDraftPredictions = {}; // Unsaved changes in the active predictor tab
 let playerPins = {}; // Hashed PIN codes for each user: playerPins[userId] = 'hashed_pin'
 let targetedPlayerId = null; // The player card clicked, pending PIN verification
 let pinRegistrationMode = false; // True if creating a new PIN, false if logging in
+let banterMessages = []; // Synced banter board chat wall messages
 
 // ==========================================================================
 // FIXTURE GENERATOR (72 matches, A-L groups, 6 matches per group)
@@ -186,8 +213,8 @@ async function dbPut(key, data) {
 }
 
 // Fetch all database states concurrently
-async function syncDatabase() {
-  showLoader();
+async function syncDatabase(isBackground = false) {
+  if (!isBackground) showLoader();
   try {
     // 1. Sync settings (Active Prediction Week)
     const settings = await dbGet('settings', { activeWeek: '1' });
@@ -204,12 +231,15 @@ async function syncDatabase() {
       predictions[pId] = await dbGet(`user_${pId}`, {});
     }
 
+    // 5. Sync banter messages
+    banterMessages = await dbGet('banter_messages', []);
+
     calculateLeaderboard();
     renderAll();
   } catch (err) {
     console.error("Critical database sync error:", err);
   } finally {
-    hideLoader();
+    if (!isBackground) hideLoader();
   }
 }
 
@@ -309,6 +339,7 @@ function renderAll() {
   renderGroupStandings();
   renderAdminPanel();
   renderCompareMatrix();
+  renderBanterMessages();
 }
 
 function renderAvatarPicker() {
@@ -798,11 +829,210 @@ function hideLoader() {
 }
 
 // ==========================================================================
+// BANTER BOARD ENGINE
+// ==========================================================================
+function escapeHTML(str) {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+function formatTimestamp(timestamp) {
+  const date = new Date(timestamp);
+  const now = new Date();
+  
+  const hours = date.getHours().toString().padStart(2, '0');
+  const minutes = date.getMinutes().toString().padStart(2, '0');
+  const timeStr = `${hours}:${minutes}`;
+
+  if (date.toDateString() === now.toDateString()) {
+    return `Today, ${timeStr}`;
+  }
+  
+  const yesterday = new Date(now);
+  yesterday.setDate(now.getDate() - 1);
+  if (date.toDateString() === yesterday.toDateString()) {
+    return `Yesterday, ${timeStr}`;
+  }
+
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  return `${months[date.getMonth()]} ${date.getDate()}, ${timeStr}`;
+}
+
+function renderBanterMessages() {
+  const container = document.getElementById('banter-messages');
+  if (!container) return;
+
+  // Track if we need to auto-scroll (user was near bottom or it's first render or sent by me)
+  const wasNearBottom = container.scrollHeight - container.clientHeight - container.scrollTop < 120;
+  const isFirstRender = container.dataset.initialRender !== 'true';
+
+  container.innerHTML = '';
+
+  if (banterMessages.length === 0) {
+    container.innerHTML = `<div class="banter-empty-state">No banter yet. Start the conversation!</div>`;
+    container.dataset.initialRender = 'true';
+    return;
+  }
+
+  banterMessages.forEach(msg => {
+    const isMe = activeUser && msg.userId === activeUser.id;
+    const msgEl = document.createElement('div');
+    msgEl.className = `banter-message ${isMe ? 'is-me' : ''}`;
+    msgEl.innerHTML = `
+      <img src="${msg.avatar}" alt="${msg.name}" class="banter-avatar">
+      <div class="banter-content">
+        <div class="banter-meta">
+          <span class="banter-user">${msg.name}</span>
+          <span class="banter-time">${formatTimestamp(msg.timestamp)}</span>
+        </div>
+        <div class="banter-text">${escapeHTML(msg.message)}</div>
+      </div>
+    `;
+    container.appendChild(msgEl);
+  });
+
+  const lastMessage = banterMessages[banterMessages.length - 1];
+  const sentByMe = lastMessage && activeUser && lastMessage.userId === activeUser.id;
+
+  if (wasNearBottom || sentByMe || isFirstRender) {
+    container.scrollTop = container.scrollHeight;
+    container.dataset.initialRender = 'true';
+  }
+}
+
+async function sendBanterMessage() {
+  if (!activeUser) {
+    alert("You must be logged in to send a message.");
+    return;
+  }
+
+  const inputEl = document.getElementById('banter-input');
+  if (!inputEl) return;
+
+  const text = inputEl.value.trim();
+  if (!text) return;
+
+  const newMessage = {
+    userId: activeUser.id,
+    name: activeUser.name,
+    avatar: activeUser.avatar,
+    message: text,
+    timestamp: Date.now()
+  };
+
+  // Push and limit to 50
+  banterMessages.push(newMessage);
+  if (banterMessages.length > 50) {
+    banterMessages = banterMessages.slice(-50);
+  }
+
+  inputEl.value = '';
+
+  // Render immediately for local snappiness
+  renderBanterMessages();
+
+  // Sync to database
+  await dbPut('banter_messages', banterMessages);
+}
+
+// ==========================================================================
+// GROUP SELECTION MANAGEMENT
+// ==========================================================================
+function selectGroup(groupId, pushState = true) {
+  if (!GROUPS_CONFIG[groupId]) return;
+  activeGroupId = groupId;
+  localStorage.setItem('wc_selected_group', groupId);
+  
+  BUCKET_ID = GROUPS_CONFIG[groupId].bucketId;
+  BASE_URL = `https://kvdb.io/${BUCKET_ID}`;
+  PLAYERS = GROUPS_CONFIG[groupId].players;
+
+  // Sync state parameters to URL
+  if (pushState) {
+    const newUrl = new URL(window.location.href);
+    newUrl.searchParams.set('group', groupId);
+    window.history.pushState({ group: groupId }, '', newUrl.toString());
+  }
+
+  // Update UI toggles (active states)
+  document.querySelectorAll('.group-toggle-btn, .header-group-btn').forEach(btn => {
+    if (btn.getAttribute('data-group') === groupId) {
+      btn.classList.add('active');
+    } else {
+      btn.classList.remove('active');
+    }
+  });
+
+  // Log out active user since they are from a different group (except maybe CJ, but it's cleaner to reset)
+  activeUser = null;
+  document.getElementById('main-app').classList.add('hidden');
+  document.getElementById('login-screen').classList.remove('hidden');
+
+  // Re-initialize predictions list for safety
+  predictions = {};
+  for (const pId of Object.keys(PLAYERS)) {
+    predictions[pId] = {};
+  }
+
+  // Force re-population of player dropdowns on group change
+  const select = document.getElementById('detail-player-select');
+  if (select) select.innerHTML = '';
+  
+  const adminSelect = document.getElementById('admin-reset-player-select');
+  if (adminSelect) adminSelect.innerHTML = '';
+
+  // Re-render and sync
+  renderAvatarPicker();
+  syncDatabase();
+}
+
+// ==========================================================================
 // EVENT LISTENERS & INITIALIZATION
 // ==========================================================================
 document.addEventListener('DOMContentLoaded', () => {
   generateFixtures();
-  syncDatabase();
+
+  // Bind Group Selectors
+  document.querySelectorAll('.group-toggle-btn, .header-group-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const groupId = e.currentTarget.getAttribute('data-group');
+      selectGroup(groupId);
+    });
+  });
+
+  // Popstate handler for browser back/forward buttons
+  window.addEventListener('popstate', (e) => {
+    const groupId = (e.state && e.state.group) || 'group1';
+    selectGroup(groupId, false);
+  });
+
+  // Initialize group state UI and variables
+  selectGroup(activeGroupId, false);
+
+  // Set up background sync interval (every 15 seconds)
+  setInterval(() => {
+    syncDatabase(true);
+  }, 15000);
+
+  // Banter board Send button
+  const sendBtn = document.getElementById('banter-send-btn');
+  if (sendBtn) {
+    sendBtn.addEventListener('click', sendBanterMessage);
+  }
+
+  // Banter board input field Enter key
+  const banterInput = document.getElementById('banter-input');
+  if (banterInput) {
+    banterInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        sendBanterMessage();
+      }
+    });
+  }
 
   // Navigation tab toggles
   document.querySelectorAll('.nav-tab').forEach(btn => {

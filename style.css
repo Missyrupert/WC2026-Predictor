@@ -1437,6 +1437,156 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* ==========================================================================
+   8.5. BANTER BOARD & SIDEBAR
+   ========================================================================== */
+.leaderboard-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.banter-board-card {
+  display: flex;
+  flex-direction: column;
+  height: 480px;
+}
+
+.banter-board-card .card-header {
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  flex-shrink: 0;
+}
+
+.banter-messages-container {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  padding-right: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+/* Custom scrollbar for message container to keep it ultra premium */
+.banter-messages-container::-webkit-scrollbar {
+  width: 6px;
+}
+.banter-messages-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+.banter-messages-container::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 3px;
+}
+.banter-messages-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.banter-message {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: var(--radius-sm);
+  padding: 0.65rem;
+  transition: var(--transition);
+}
+
+.banter-message:hover {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.banter-message.is-me {
+  background: rgba(0, 245, 160, 0.03);
+  border-color: rgba(0, 245, 160, 0.12);
+}
+
+.banter-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  flex-shrink: 0;
+}
+
+.banter-message.is-me .banter-avatar {
+  border-color: var(--accent);
+}
+
+.banter-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.banter-meta {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin-bottom: 0.15rem;
+}
+
+.banter-user {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: var(--text-main);
+}
+
+.banter-message.is-me .banter-user {
+  color: var(--accent);
+}
+
+.banter-time {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+}
+
+.banter-text {
+  font-size: 0.825rem;
+  color: var(--text-main);
+  word-break: break-word;
+  line-height: 1.4;
+}
+
+.banter-input-area {
+  display: flex;
+  gap: 0.5rem;
+  border-top: 1px solid var(--border-color);
+  padding-top: 0.85rem;
+  flex-shrink: 0;
+}
+
+.banter-input {
+  flex: 1;
+  background: var(--bg-input);
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
+  padding: 0.55rem 0.85rem;
+  border-radius: var(--radius-sm);
+  outline: none;
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  transition: var(--transition);
+}
+
+.banter-input:focus {
+  border-color: var(--border-focus);
+  box-shadow: 0 0 10px rgba(0, 245, 160, 0.15);
+}
+
+.banter-empty-state {
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  padding: 2rem 1rem;
+  margin: auto 0;
+  font-style: italic;
+}
+
+/* ==========================================================================
    9. RESPONSIVE MEDIA QUERIES
    ========================================================================== */
 @media (max-width: 1024px) {
@@ -1591,4 +1741,83 @@ h1, h2, h3, h4, h5, h6 {
     padding: 0.1rem 0.35rem;
     margin-left: 0.25rem;
   }
+  .header-group-selector {
+    margin: 0;
+    align-self: center;
+  }
+}
+
+/* ==========================================================================
+   11. GROUP SELECTOR COMPONENT (UNIFIED APP)
+   ========================================================================== */
+.group-selector-segmented {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 50px;
+  padding: 4px;
+  display: inline-flex;
+  gap: 4px;
+  margin-bottom: 2.5rem;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.group-toggle-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 0.95rem;
+  padding: 0.6rem 2.2rem;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: var(--transition);
+  outline: none;
+}
+
+.group-toggle-btn:hover {
+  color: #FFF;
+}
+
+.group-toggle-btn.active {
+  background: linear-gradient(90deg, var(--accent) 0%, var(--primary) 100%);
+  color: var(--bg-color);
+  box-shadow: 0 4px 15px rgba(0, 245, 160, 0.25);
+}
+
+.header-group-selector {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 50px;
+  padding: 2px;
+  display: inline-flex;
+  gap: 2px;
+  margin-left: 2rem;
+  margin-right: auto;
+  align-self: center;
+}
+
+.header-group-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 0.8rem;
+  padding: 0.35rem 1.1rem;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: var(--transition);
+  outline: none;
+}
+
+.header-group-btn:hover {
+  color: #FFF;
+}
+
+.header-group-btn.active {
+  background: rgba(0, 245, 160, 0.15);
+  border: 1px solid rgba(0, 245, 160, 0.3);
+  color: var(--accent);
+  text-shadow: 0 0 10px rgba(0, 245, 160, 0.3);
 }
